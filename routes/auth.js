@@ -1,7 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const { get_user, create_user } = require("../db.js");
-
 const router = express.Router();
 
 
@@ -77,7 +76,6 @@ router.post("/register", async(req, res) => {
 
 router.get("/logout", (req, res) => {
     req.session.user = null;
-    //res.redirect('/login')
 });
 
 module.exports = router;

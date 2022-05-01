@@ -1,20 +1,18 @@
 const express = require("express");
 const router = express.Router();
-router.use(express.static("static"));
-
 
 const {
     create_operacion,
     get_operacion,
     delete_registro,
+    update_registro,
+    get_operacion_tipo,
 } = require("../db.js");
 
 
-// router.use(express.static(htmlPath));
-
 function protected_route(req, res, next) {
     if (!req.session.user) {
-        // si quiere trabajar sin rutas prptegidas, comente la siguiente línea
+        // si quiere trabajar sin rutas protegidas, comente la siguiente línea
         return res.redirect("/login");
     }
     next();
@@ -27,43 +25,53 @@ router.get("/", protected_route, async(req, res) => {
 
 router.get("/listado_operaciones", protected_route, async(req, res) => {
     const operacion = await get_operacion();
-    //console.log(operacion);
-    send.json({ operacion });
+    res.send({ operacion });
 });
 
 router.get("/operaciones", protected_route, async(req, res) => {
     const id = req.session.user.id;
     const operacion = await get_operacion(id);
-    //console.log(operacion);
     res.send(operacion);
-    // res.send(id_login);
-
 });
 
 router.post("/operacion", async(req, res) => {
     let user_id = req.session.user.id;
-    //console.log(user_id);
     let concepto = req.body.concepto;
     let monto = req.body.monto;
     let fecha = req.body.fecha;
     let tipo = req.body.tipo;
 
     await create_operacion(user_id, concepto, monto, fecha, tipo);
-    const operacion = await get_operacion()
-        //console.log(operacion);
-    res.json({ operacion });
+    res.redirect('/');
 });
 
-router.post("/delete", async(req, res) => {
+router.get("/delete/:id", async(req, res) => {
     let user_id = req.session.user.id;
-    console.log("este es el ", req.body.id);
-    let id = req.body.id;
+    let id = req.params.id;
+    try {
+        await delete_registro(id, user_id);
+        res.redirect('/operaciones.html');
+    } catch (err) {
+        res.json({ err })
+    }
+});
 
-    await delete_registro(id, user_id);
-    //const operacion = await get_operacion();
+router.post("/update", async(req, res) => {;
+    let user_id = req.session.user.id;
+    let id = req.body.identificador;
+    let concepto = req.body.concepto;
+    let monto = req.body.monto;
+    let fecha = req.body.fecha;
 
+    await update_registro(id, user_id, concepto, monto, fecha);
+    res.redirect('/operaciones.html');
+});
 
-    return res.render("index.html");
+router.post("/listado_tipo", protected_route, async(req, res) => {
+    const id = req.session.user.id;
+    let tipo = req.body.tipo;
+    const operacion = await get_operacion_tipo(id, tipo);
+    res.send(operacion);
 });
 
 

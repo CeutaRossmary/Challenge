@@ -14,15 +14,18 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<span class="navbar-toggler-icon"></span>
+</button>
                 <div class="collapse navbar-collapse" id="">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link  btn-outline-success" aria-current="page" href="index.html">Home</a>
+                            <a class="nav-link  btn-outline-success" aria-current="page" href="operaciones.html">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn-outline-success" href="operaciones.html">Listado de Operaciones</a>
+                            <a class="nav-link btn-outline-success" href="index.html">Registrar Operaciones</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-success" href="listado.html">Listado de Operaciones</a>
                         </li>
                     </ul>
                     <div class="d-flex">
@@ -47,52 +50,85 @@
                     </tr>
                 </thead>
                 <tbody id="tbody">
-                    <tr>
-                        <!-- <th scope="row">1</th> -->
-                    </tr>
-
                 </tbody>
             </table>
         </div>
+        <!-- The Modal -->
+        <form method="post" action="/update">
+            <div class="modal" id="myModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-content">
+                            <h5 class="modal-title text-center text-danger" id="exampleModalLabel">Editar Operación</h5>
+                            <div class="col-md-8 fw-bold m-4">
+                                <input type="text" class="form-control" aria-describedby="concepto" id="Id" name="identificador" required hidden>
+                            </div>
+                            <div class="col-md-8 fw-bold m-4">
+                                <label class="form-label">Concepto</label>
+                                <input type="text" class="form-control" aria-describedby="concepto" id="concepto" name="concepto" required>
+                            </div>
+                            <div class="col-md-8 fw-bold m-4">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="monto" name="monto" required>
+                            </div>
+                            <div class="col-md-8 fw-bold m-4">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" class="form-control" id="fecha" name="fecha" required>
+                            </div>
+                        </div>
+                        <div class="col-12 m-2">
+                            <button type="button" class="btn btn-danger mt-3 mb-3 w-25  m-2" data-bs-dismiss="modal" onclick="editar()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary mt-3 mb-3 w-25  m-2">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <!-- **************************************** -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.0/axios.min.js" integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src=https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js></script>
         <script>
             async function cargar() {
-                // primero pido los datos de los destinos al servidor
-                const datos = await axios.get('/operaciones')
-                    // depués borro todo lo que esté en la tabla (su HTML interno)
                 $('#tbody').html('')
-                    //finalmente itero sobre los destinos recibidos, y los voy escribiendo en la tabla
+                const datos = await axios.get('/operaciones')
                 for (let user of datos.data) {
-
-                    console.log(datos.data)
+                    let now = moment(user.fecha).format('YYYY-MM-DD')
                     $('#tbody').append(`
-          <tr class="text-center">
-            <td id="id">${user.id}</td>
-            <td>${user.user_id}</td>
-             <td>${user.concepto}</td>
-            <td>${user.monto}</td>
-            <td>${user.fecha}</td>
-            <td>${user.tipo}</td>
-           
-          <td><button  class="btn btn-danger" onclicK="eliminar()">Eliminar</button></td>
-          <td><button  class="btn btn-warning">Editar</button></td>
-          <tr>
-        `)
+                        <tr class="text-center">
+                        <td id="id">${user.id}</td>
+                        <td id="id_user">${user.user_id}</td>
+                        <td>${user.concepto}</td>
+                        <td>${user.monto}</td>
+                        <td>${now}</td>
+                        <td>${user.tipo}</td>
+                        <td><a class="btn btn-danger" href="/delete/${user.id}">Eliminar</a></td>
+                        <td><button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#myModal" onclick="editar(${user.id})">
+                        Editar</button></td>
+                        <tr>
+                    `)
                 }
             }
-            async function eliminar() {
-                console.log(id)
-                    // console.log("entra", user.id)
-                const eliminado = await axios.post('/delete', {
-                    id: $('#id').html()
-
-                })
-                console.log(id)
+            // ************************************************************************************************
+            async function editar(id) {
+                const datos = await axios.get('/operaciones')
+                for (let user of datos.data) {
+                    let id_edit = id
+                    let fecha = moment(user.fecha).format('YYYY-MM-DD')
+                    fecha.isValid = true
+                    try {
+                        if (id_edit == user.id) {
+                            $('#Id').val(user.id)
+                            $('#concepto').val(user.concepto)
+                            $('#monto').val(user.monto)
+                            $('#fecha').val(fecha)
+                        }
+                    } catch (e) {
+                        console.log(e)
+                    }
+                }
             }
-            cargar();
-
             window.onload = cargar;
         </script>
 </body>
